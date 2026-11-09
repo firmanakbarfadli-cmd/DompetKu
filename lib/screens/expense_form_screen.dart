@@ -313,7 +313,7 @@ class _ExpenseFormScreenState extends State<ExpenseFormScreen> {
                   textCapitalization: TextCapitalization.sentences,
                   inputFormatters: [LengthLimitingTextInputFormatter(60)],
                   decoration: const InputDecoration(
-                    hintText: 'Nama pengeluaran (contoh: Makan siang)',
+                    hintText: 'Nama (contoh: Makan siang)',
                   ),
                   validator: (v) {
                     if (v == null || v.trim().isEmpty) {
