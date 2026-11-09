@@ -47,8 +47,7 @@ class _ExportScreenState extends State<ExportScreen> {
     }
   }
 
-  bool get _rangeReady =>
-      _type != _PeriodType.custom || _custom != null;
+  bool get _rangeReady => _type != _PeriodType.custom || _custom != null;
 
   String get _label {
     final (from, to) = _range;
@@ -130,16 +129,25 @@ class _ExportScreenState extends State<ExportScreen> {
     final items = _items(all);
     final total = StatisticsCalculator.total(items);
     final canExport = items.isNotEmpty && !_busy;
-    final outline = Theme.of(context).colorScheme.outline;
+    final scheme = Theme.of(context).colorScheme;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final gradient = dark
+        ? const [Color(0xFF166534), Color(0xFF0F2A1A)]
+        : const [Color(0xFF16A34A), Color(0xFF166534)];
 
     return Scaffold(
       appBar: AppBar(title: const Text('Ekspor Laporan')),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
           children: [
-            Text('Periode', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
+            Text('PERIODE',
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: scheme.outline,
+                      letterSpacing: 1.2,
+                      fontWeight: FontWeight.w600,
+                    )),
+            const SizedBox(height: 10),
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -170,26 +178,58 @@ class _ExportScreenState extends State<ExportScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(_label,
-                        style: Theme.of(context).textTheme.titleMedium),
-                    const SizedBox(height: 8),
-                    Text('${items.length} transaksi'),
-                    const SizedBox(height: 4),
-                    Text(
-                      CurrencyFormatter.format(total),
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                  ],
+
+            // ---- Ringkasan ----
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: gradient,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _label,
+                    style:
+                        TextStyle(color: Colors.white.withValues(alpha: 0.8)),
+                  ),
+                  const SizedBox(height: 6),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      CurrencyFormatter.format(total),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 30,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.22),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '${items.length} transaksi',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             if (_rangeReady && items.isEmpty)
@@ -197,7 +237,7 @@ class _ExportScreenState extends State<ExportScreen> {
                 padding: const EdgeInsets.only(top: 12),
                 child: Text(
                   'Tidak ada transaksi pada periode ini, jadi belum ada yang bisa diekspor.',
-                  style: TextStyle(color: outline),
+                  style: TextStyle(color: scheme.outline),
                 ),
               ),
             const SizedBox(height: 20),
@@ -218,10 +258,19 @@ class _ExportScreenState extends State<ExportScreen> {
                 child: Center(child: CircularProgressIndicator()),
               ),
             const SizedBox(height: 20),
-            Text(
-              'Setelah file dibuat, pilih tujuan di menu berbagi, misalnya '
-              'Simpan ke File, Google Drive, atau WhatsApp.',
-              style: TextStyle(color: outline),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.info_outline, size: 18, color: scheme.outline),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Setelah file dibuat, pilih tujuan di menu berbagi, misalnya '
+                    'Simpan ke File, Google Drive, atau WhatsApp.',
+                    style: TextStyle(color: scheme.outline, fontSize: 12),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
