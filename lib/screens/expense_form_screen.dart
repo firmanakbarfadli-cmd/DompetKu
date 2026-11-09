@@ -64,6 +64,14 @@ class _ExpenseFormScreenState extends State<ExpenseFormScreen> {
     }
   }
 
+  String? _validateAmount() {
+    final v = _amountCtrl.text;
+    if (v.isEmpty) return 'Nominal wajib diisi';
+    final n = int.tryParse(v);
+    if (n == null || n <= 0) return 'Nominal harus lebih dari 0';
+    return null;
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
@@ -148,56 +156,87 @@ class _ExpenseFormScreenState extends State<ExpenseFormScreen> {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        TextFormField(
-                          controller: _amountCtrl,
-                          autofocus: !widget.isEdit,
-                          textAlign: TextAlign.center,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                            LengthLimitingTextInputFormatter(12),
-                          ],
-                          style: const TextStyle(
-                            fontSize: 36,
-                            fontWeight: FontWeight.w700,
+                        const SizedBox(height: 8),
+                        FormField<String>(
+                          autovalidateMode: AutovalidateMode.onUserInteraction,
+                          validator: (_) => _validateAmount(),
+                          builder: (state) => Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Rp',
+                                    style: TextStyle(
+                                      fontSize: 34,
+                                      fontWeight: FontWeight.w700,
+                                      color: scheme.primary,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  IntrinsicWidth(
+                                    child: ConstrainedBox(
+                                      constraints: const BoxConstraints(
+                                          minWidth: 36, maxWidth: 250),
+                                      child: TextField(
+                                        controller: _amountCtrl,
+                                        autofocus: !widget.isEdit,
+                                        textAlign: TextAlign.center,
+                                        keyboardType: TextInputType.number,
+                                        inputFormatters: [
+                                          FilteringTextInputFormatter
+                                              .digitsOnly,
+                                          LengthLimitingTextInputFormatter(12),
+                                        ],
+                                        onChanged: (v) => state.didChange(v),
+                                        style: const TextStyle(
+                                          fontSize: 34,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                        decoration: const InputDecoration(
+                                          hintText: '0',
+                                          isCollapsed: true,
+                                          filled: false,
+                                          contentPadding:
+                                              EdgeInsets.symmetric(vertical: 8),
+                                          border: noBorder,
+                                          enabledBorder: noBorder,
+                                          focusedBorder: noBorder,
+                                          errorBorder: noBorder,
+                                          focusedErrorBorder: noBorder,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (state.hasError)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 2),
+                                  child: Text(
+                                    state.errorText!,
+                                    style: TextStyle(
+                                        color: scheme.error, fontSize: 12),
+                                  ),
+                                ),
+                            ],
                           ),
-                          decoration: InputDecoration(
-                            prefixText: 'Rp ',
-                            prefixStyle: TextStyle(
-                              fontSize: 36,
-                              fontWeight: FontWeight.w700,
-                              color: scheme.primary,
-                            ),
-                            hintText: '0',
-                            filled: false,
-                            border: noBorder,
-                            enabledBorder: noBorder,
-                            focusedBorder: noBorder,
-                            errorBorder: noBorder,
-                            focusedErrorBorder: noBorder,
-                          ),
-                          validator: (v) {
-                            if (v == null || v.isEmpty) {
-                              return 'Nominal wajib diisi';
-                            }
-                            final n = int.tryParse(v);
-                            if (n == null || n <= 0) {
-                              return 'Nominal harus lebih dari 0';
-                            }
-                            return null;
-                          },
                         ),
                         ValueListenableBuilder<TextEditingValue>(
                           valueListenable: _amountCtrl,
                           builder: (context, value, _) {
                             final n = int.tryParse(value.text);
-                            return Text(
-                              (n == null || n == 0)
-                                  ? ' '
-                                  : CurrencyFormatter.format(n),
-                              style: TextStyle(
-                                color: scheme.primary,
-                                fontWeight: FontWeight.w600,
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                (n == null || n == 0)
+                                    ? ' '
+                                    : CurrencyFormatter.format(n),
+                                style: TextStyle(
+                                  color: scheme.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             );
                           },
@@ -254,8 +293,9 @@ class _ExpenseFormScreenState extends State<ExpenseFormScreen> {
                                 fontWeight: selected
                                     ? FontWeight.w600
                                     : FontWeight.w500,
-                                color:
-                                    selected ? scheme.onSurface : scheme.outline,
+                                color: selected
+                                    ? scheme.onSurface
+                                    : scheme.outline,
                               ),
                             ),
                           ),
@@ -273,8 +313,7 @@ class _ExpenseFormScreenState extends State<ExpenseFormScreen> {
                   textCapitalization: TextCapitalization.sentences,
                   inputFormatters: [LengthLimitingTextInputFormatter(60)],
                   decoration: const InputDecoration(
-                    labelText: 'Nama pengeluaran',
-                    hintText: 'Contoh: Makan siang',
+                    hintText: 'Nama pengeluaran (contoh: Makan siang)',
                   ),
                   validator: (v) {
                     if (v == null || v.trim().isEmpty) {
@@ -288,11 +327,18 @@ class _ExpenseFormScreenState extends State<ExpenseFormScreen> {
                   onTap: _pickDate,
                   borderRadius: BorderRadius.circular(16),
                   child: InputDecorator(
-                    decoration: const InputDecoration(
-                      labelText: 'Tanggal',
-                      suffixIcon: Icon(Icons.calendar_today, size: 20),
+                    decoration: const InputDecoration(),
+                    child: Row(
+                      children: [
+                        Icon(Icons.calendar_today_outlined,
+                            size: 20, color: scheme.outline),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(DateHelper.formatDisplay(_date)),
+                        ),
+                        Icon(Icons.chevron_right, color: scheme.outline),
+                      ],
                     ),
-                    child: Text(DateHelper.formatDisplay(_date)),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -301,8 +347,7 @@ class _ExpenseFormScreenState extends State<ExpenseFormScreen> {
                   maxLines: 3,
                   inputFormatters: [LengthLimitingTextInputFormatter(200)],
                   decoration: const InputDecoration(
-                    labelText: 'Catatan (opsional)',
-                    alignLabelWithHint: true,
+                    hintText: 'Catatan (opsional)',
                   ),
                 ),
                 const SizedBox(height: 24),
