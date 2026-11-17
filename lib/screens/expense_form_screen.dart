@@ -249,7 +249,7 @@ class _ExpenseFormScreenState extends State<ExpenseFormScreen> {
 
                 // ---- Kategori ----
                 sectionLabel('KATEGORI'),
-                GridView.builder(
+                                GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: ExpenseCategory.values.length,
@@ -262,29 +262,42 @@ class _ExpenseFormScreenState extends State<ExpenseFormScreen> {
                   itemBuilder: (context, i) {
                     final c = ExpenseCategory.values[i];
                     final selected = c == _category;
-                    return InkWell(
-                      borderRadius: BorderRadius.circular(16),
-                      onTap: () => setState(() => _category = c),
-                      child: Column(
-                        children: [
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 150),
-                            width: 58,
-                            height: 58,
-                            decoration: BoxDecoration(
-                              color: c.color
-                                  .withValues(alpha: selected ? 0.25 : 0.12),
+                    void select() => setState(() => _category = c);
+
+                    return Column(
+                      children: [
+                        // Kotak ikon: riak dan area ketuk persis seukuran kotak.
+                        Material(
+                          animationDuration: const Duration(milliseconds: 150),
+                          color: c.color.withValues(alpha: selected ? 0.25 : 0.12),
+                          clipBehavior: Clip.antiAlias,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            side: BorderSide(
+                              color: selected ? c.color : Colors.transparent,
+                              width: 2,
+                            ),
+                          ),
+                          child: InkWell(
+                            onTap: select,
+                            customBorder: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(18),
-                              border: Border.all(
-                                color:
-                                    selected ? c.color : Colors.transparent,
-                                width: 2,
+                            ),
+                            child: SizedBox(
+                              width: 58,
+                              height: 58,
+                              child: Center(
+                                child: Icon(c.icon, color: c.color),
                               ),
                             ),
-                            child: Icon(c.icon, color: c.color),
                           ),
-                          const SizedBox(height: 6),
-                          FittedBox(
+                        ),
+                        const SizedBox(height: 6),
+                        // Mengetuk label tetap memilih kategori, tanpa efek riak.
+                        GestureDetector(
+                          onTap: select,
+                          behavior: HitTestBehavior.opaque,
+                          child: FittedBox(
                             fit: BoxFit.scaleDown,
                             child: Text(
                               c.label,
@@ -299,8 +312,8 @@ class _ExpenseFormScreenState extends State<ExpenseFormScreen> {
                               ),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     );
                   },
                 ),
